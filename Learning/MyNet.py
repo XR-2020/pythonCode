@@ -10,7 +10,7 @@ from torchvision.utils import save_image
 from torchvision.datasets import ImageFolder
 from torchvision import transforms,datasets
 from torch.nn import functional as F
-
+from cnn_demo.cnnSeg_torch import summary
 
 transforms = transforms.Compose([
     transforms.ToTensor()
@@ -24,7 +24,7 @@ def keep_image_size_open(path, size=(256, 256)):
             size：生成的图像大小
             color：生成图像的颜色，默认为0，即黑色
     """
-    mask = Image.new('RGB', (temp, temp), (0, 0, 0))
+    mask = Image.new('L', (temp, temp), 0)
     # 将一张图粘贴到另一张图像上,paste(image,box)变量box是一个给定左上角坐标的2元组
     mask.paste(img, (0, 0))
     mask = mask.resize(size)
@@ -52,7 +52,7 @@ class MyNet(nn.Module):
     def __init__(self):
         super(MyNet, self).__init__()
         self.inlayer=nn.Sequential(
-            nn.Conv2d(3,64,3,1,1, padding_mode='reflect', bias=False),
+            nn.Conv2d(1,64,3,1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(64),
             # nn.LeakyReLU()
             nn.ReLU(),
@@ -62,40 +62,51 @@ class MyNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2),
 
+            #self.conv_dw(64, 128, 1),
             nn.Conv2d(64, 128, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(128),
             # nn.LeakyReLU()
             nn.ReLU(),
+
+            #self.conv_dw(128, 128, 1),
             nn.Conv2d(128, 128, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(128),
             # nn.LeakyReLU()
             nn.ReLU(),
             nn.MaxPool2d(2),
 
+            #self.conv_dw(128, 256, 1),
             nn.Conv2d(128, 256, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(256),
             # nn.LeakyReLU()
             nn.ReLU(),
+
+            #self.conv_dw(256, 256, 1),
             nn.Conv2d(256, 256, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(256),
             # nn.LeakyReLU()
             nn.ReLU(),
             nn.MaxPool2d(2),
 
+            #self.conv_dw(256, 512, 1),
             nn.Conv2d(256, 512, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(512),
             # nn.LeakyReLU()
             nn.ReLU(),
+
+            #self.conv_dw(512, 512, 1),
             nn.Conv2d(512, 512, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(512),
             # nn.LeakyReLU()
             nn.ReLU(),
             nn.MaxPool2d(2),
 
+            #self.conv_dw(512, 1024, 1),
             nn.Conv2d(512, 1024, 3, 1,1, padding_mode='reflect', bias=False),
             nn.BatchNorm2d(1024),
             # nn.LeakyReLU()
             nn.ReLU(),
+            #self.conv_dw(1024, 1024, 1),
             nn.Conv2d(1024, 1024, 3, 1,1, padding_mode='reflect', bias=False)
         )
         self.outlayer1=nn.Sequential(
@@ -139,7 +150,7 @@ class MyNet(nn.Module):
             nn.ReLU()
         )
         self.last = nn.Sequential(
-            nn.Conv2d(64, 3, 1, 1),
+            nn.Conv2d(64, 1, 1, 1),
             nn.Sigmoid()
         )
     def forward(self,input):
@@ -154,16 +165,28 @@ class MyNet(nn.Module):
         input = self.outlayer4(input)
         input = self.last(input)
         return input
+    def conv_dw(self,inp, oup, stride):
+        return nn.Sequential(
+            nn.Conv2d(inp, inp, 3, stride, 1, groups=inp,bias=False, padding_mode='reflect'),
+            nn.BatchNorm2d(inp),
+            nn.ReLU(),
+
+            nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+            nn.BatchNorm2d(oup),
+            nn.ReLU(),
+        )
 
 if __name__ == '__main__':
     save_path='./picture'
     net=MyNet()
+    summary(net, input_size=(1, 256, 256))
     loss_fn=nn.BCELoss()
     optimizer=torch.optim.Adam(net.parameters(),lr=0.01)
 
     total=130
     loss_total=0
-
+    point_x=[]
+    point_y=[]
     for epoch in range (total):
         loss_total = 0
         print("**********{}".format(epoch))
@@ -174,11 +197,16 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            _out_image = output[0]
-            save_image(_out_image, f'{save_path}/{epoch}.png')
+            if(epoch % 10==0):
+                _out_image = output[0]
+                save_image(_out_image, f'{save_path}/{epoch}.png')
             torch.save(net, 'params.pth')
-    #     plt.scatter(epoch, loss.item(), s=80)
-    # plt.show()
+        plt.scatter(epoch, loss.item(), s=8,color='blue')
+        point_x.append(epoch)
+        point_y.append(loss.item())
+    plt.plot(point_x, point_y, linewidth=1, color='b')
+    plt.title('loss', fontsize=20)
+    plt.show()
 
 
 test_path='img.png'
