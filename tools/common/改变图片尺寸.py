@@ -4,7 +4,8 @@ from PIL import Image
 import os.path
 import glob
 def convertjpg(jpgfile,outdir,width=216,height=256):
-    img=Image.open(jpgfile)
+    img2=Image.open(jpgfile)
+    img=img2.copy(img2)
     try:
         new_img=img.resize((width,height),Image.BILINEAR)
         new_img.save(os.path.join(outdir,os.path.basename(jpgfile)))
