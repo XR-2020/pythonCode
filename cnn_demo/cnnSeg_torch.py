@@ -149,8 +149,7 @@ class Net(nn.Module):
             kfilter: 卷积时卷积核大小
             padding: 填充
             kernel_size:池化时卷积核大小
-            stride: 步长
-
+            stride: 池化步长
         Returns:
 
         """
