@@ -17,7 +17,7 @@ import os
 #     img.save(os.path.join(path, image))
 
 #操作单张图
-img = Image.open('/Learning/picture/61.png')  # 打开图片
+img = Image.open('cnnSeg_torch网络结构图.PNG')  # 打开图片
 print(img.format, img.size, img.mode)#打印出原图格式
-img = img.convert("L")  # 4通道转化为灰度L通道
-img.save('E:/python/Learning/picture/label/61.png')
+img = img.convert("RGB")  # 4通道转化为灰度L通道
+img.save('cnnSeg_torch网络结构图.jpg')

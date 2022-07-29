@@ -65,7 +65,7 @@ def crop(img):
 
 def main():
 
-    image=Image.open('61.png')
+    image=Image.open('cnnSeg_torch网络结构图.jpg')
     # flip(image)
     # vflip(image)
     #rotation_90(image)
