@@ -9,5 +9,5 @@ def convertjpg(jpgfile,outdir,width=512,height=512):
         new_img.save(os.path.join(outdir,os.path.basename(jpgfile)))
     except Exception as e:
         print(e)
-for jpgfile in glob.glob("/OtherGive_UNet/data/membrane/train/label/*.png"):
-    convertjpg(jpgfile,"E:/python/OtherGive_UNet/data/membrane/train/label")
+for jpgfile in glob.glob("/OtherGive_UNet/data.txt/membrane/image/label/*.png"):
+    convertjpg(jpgfile,"E:/python/OtherGive_UNet/data.txt/membrane/image/label")

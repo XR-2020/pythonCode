@@ -45,7 +45,7 @@ def elastic_transform(image, alpha, sigma,
 
 
 if __name__ == '__main__':
-    img_path = '61.png'
+    img_path = '61a.png'
     imageA = cv2.imread(img_path)
     img_show=cv2.cvtColor(imageA.copy(), cv2.COLOR_BGR2GRAY)
     imageA = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)

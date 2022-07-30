@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import torch
 
 
-# output = torch.sigmoid(output).data.cpu().numpy()
+# output = torch.sigmoid(output).data.txt.cpu().numpy()
 # IOU
 def iou_score(output, target):
     smooth = 1e-5

@@ -199,9 +199,9 @@ def train():
         Loss = 0
         print('----第%d轮迭代-----' % num)
         """
-             for i, data in enumerate(train_dataloader):
+             for i, data.txt in enumerate(train_dataloader):
                 i（list）：一张图片在网络中各层的Tensor,每一层一个文件
-                data（list）:一张输入图片的Tensor,一张目标标签图片的Tensor,一张图片一个文件夹,原图是第一个文件，标签是第二个文件
+                data.txt（list）:一张输入图片的Tensor,一张目标标签图片的Tensor,一张图片一个文件夹,原图是第一个文件，标签是第二个文件
         """
         for i, data in enumerate(train_dataloader):
             inputs, labels = data

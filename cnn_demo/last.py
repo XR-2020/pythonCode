@@ -11,38 +11,37 @@ from PIL import Image
 from torchsummary import summary
 
 class Mydataset(Dataset):
-    def __init__(self, file_path):
+    def __init__(self, image_path,mask_path):
         self.data = []#图像数据，list
         self.target = []#标签数据,list
         data_y = []#存放图像标签,list
         data_x = []#存放图像,list
         name=[]
-        image_dir = os.path.join(file_path)#图像文件夹地址,str
-        list_image = os.listdir(image_dir)#图像文件列表,list
+        list_image = os.listdir(mask_path)#图像文件列表,list
         for image in list_image:
-            if 'mask' in image:
-                data_y_path = os.path.join(image_dir, image)
-                datay = cv2.imread(data_y_path, cv2.IMREAD_GRAYSCALE)#以灰度图像模式读入图像ndarray类型
-                datay = cv2.resize(datay, (256, 256))#将图片尺寸改为256*256大小
-                """
-                datay/255：
-                    将像素值归一化，使像素值在0-1之间,
-                    1.减小数字大小,降低计算难度
-                    2.防止通吃效果即像素值过大会对最后结果造成很大影响，不同像素值对结果影响程度不同
-                torch.Tensor（）
-                    将图像的数据类型由ndarray转为3维Tensor
-                """
-                datay = torch.Tensor(datay/255)#DataLoader中的dataset要求输入为Tensor，在此之前datay均为ndarray类型
-                datay = datay.view(1, 256, 256)#重构图像
-                data_y.append(datay)
-            else:
-                data_x_path = os.path.join(image_dir, image)
-                datax = cv2.imread(data_x_path, cv2.IMREAD_GRAYSCALE)#ndarray
-                datax = cv2.resize(datax, (256, 256))
-                datax = torch.Tensor(datax/255)
-                datax = datax.view(1, 256, 256)
-                data_x.append(datax)
-                name.append(image)
+            #添加标签
+            data_y_path = os.path.join(mask_path, image)
+            datay = cv2.imread(data_y_path, cv2.IMREAD_GRAYSCALE)  # 以灰度图像模式读入图像ndarray类型
+            datay = cv2.resize(datay, (256, 256))  # 将图片尺寸改为256*256大小
+            """
+            datay/255：
+                将像素值归一化，使像素值在0-1之间,
+                1.减小数字大小,降低计算难度
+                2.防止通吃效果即像素值过大会对最后结果造成很大影响，不同像素值对结果影响程度不同
+            torch.Tensor（）
+                将图像的数据类型由ndarray转为3维Tensor
+            """
+            datay = torch.Tensor(datay / 255)  # DataLoader中的dataset要求输入为Tensor，在此之前datay均为ndarray类型
+            datay = datay.view(1, 256, 256)  # 重构图像
+            data_y.append(datay)
+            #添加图像
+            data_x_path = os.path.join(image_path, image)
+            datax = cv2.imread(data_x_path, cv2.IMREAD_GRAYSCALE)  # ndarray
+            datax = cv2.resize(datax, (256, 256))
+            datax = torch.Tensor(datax / 255)
+            datax = datax.view(1, 256, 256)
+            data_x.append(datax)
+            name.append(image)
         #堆叠使3维Tensor转为4维Tensor
         self.data = torch.stack(data_x)#Tensor,4维
         self.target = torch.stack(data_y)#Tensor
@@ -233,14 +232,17 @@ def save_featureMap(name,list):
             plt.close()
 
 def train():
+    file = open('data.txt', mode='w',encoding='utf-8')
     batch_size = 2
-    trainfile_path = './data_list/train'
+    trainimage_path = 'E:/graduate_study/work/full_dataset/TraingSet/TrainingSet_images'
+    trainmask_path='./data_list/train/mask'
     """
     traindataset = Mydataset(trainfile_path)：
         执行完成后traindataset数据类型为Mydataset，包含data(Tensor,4维)，len(int),target(Tensor,4维)
     """
-    traindataset = Mydataset(trainfile_path)
+    traindataset = Mydataset(trainimage_path,trainmask_path)
     name=traindataset.name
+    len=traindataset.len
     #DataLoader中的dataset要求输入为Tensor
     train_dataloader = DataLoader(
         dataset=traindataset,
@@ -257,15 +259,17 @@ def train():
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     loss_function = nn.BCELoss()
-    num_size = 1
+    num_size = 120
     for num in range(num_size):
+    #while(True):
         Loss = 0
-        print('----第%d轮迭代-----' % num)
+        writedata='----第'+str(num+1)+'轮迭代-----\n'
+        file.write(writedata)
         """
-             for i, data in enumerate(train_dataloader):
+             for i, data.txt in enumerate(train_dataloader):
                 i:元素下标
                 inputs（list）：一张图片在网络中各层的Tensor,每一层一个文件
-                data（list）:一张输入图片的Tensor,一张目标标签图片的Tensor,一张图片一个文件夹,原图是第一个文件，标签是第二个文件
+                data.txt（list）:一张输入图片的Tensor,一张目标标签图片的Tensor,一张图片一个文件夹,原图是第一个文件，标签是第二个文件
         """
         for i, data in enumerate(train_dataloader):
             inputs, labels = data
@@ -277,14 +281,25 @@ def train():
             Loss += loss
             loss.backward()
             optimizer.step()
-            save_featureMap(name[i].split('.')[0], fm)
-        print('损失为%f' % Loss.item())
+            writedata=str(name[i])+'损失为：'+str(loss.item())+'\n'
+            file.write(writedata)
+            print("{}损失为：{}".format(name[i],loss))
+            torch.save(model, 'cnn.pth')
+            #save_featureMap(name[i].split('.')[0], fm)
+        writedata = '----第' + str(num+1) + '轮迭代总损失为'+str(Loss.item())+'-----\n'
+        file.write(writedata)
+        print("第{}轮epoch总损失为：{}".format(num+1,Loss.item()))
+        num+=1
     return model, optimizer
 
 
 def test(model):
-    testfile_path = './data_list/test'
-    testdataset = Mydataset(testfile_path)
+    # testimage_path = 'E:/graduate_study/work/full_dataset/Test1Set/Test1Set_images'
+    # testmask_path = 'E:/graduate_study/work/full_dataset/Test1Set/Test1Set_labels/ocontour'
+    testimage_path = './data_list/test/image'
+    testmask_path = './data_list/test/mask'
+    testdataset = Mydataset(testimage_path,testmask_path)
+    name=testdataset.name
     test_dataloaders = DataLoader(dataset=testdataset, batch_size=1)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     with torch.no_grad():
@@ -292,14 +307,14 @@ def test(model):
             inputs, labels = data
             inputs = inputs.to(device)
             labels = labels.to(device)
-            prediction,i = model(inputs)
+            prediction,fm= model(inputs)
             img_y = torch.reshape(prediction, (256, 256)).detach().cpu().numpy()  # 取出数值部分，原大小是1*1*128*128
             # 对应的二值图
             img = np.round(img_y)  # 预测标签
             img = img * 255  # *255
             im = Image.fromarray(img)  # numpy 转 image类
             im = np.array(im, dtype='uint8')
-            Image.fromarray(im, 'L').save("%03d.png" % i)
+            Image.fromarray(im, 'L').save("result/{}".format(name[i]))
             i = i + 1
             plt.pause(0.01)
 """
@@ -310,15 +325,12 @@ def test(model):
 
 if __name__ == '__main__':
 
-    net, optimizer= train()
-
-    # plt.imsave(batchidx, arr, format='jpg')
-
-        # plt.show()
+    train()
+    # net, optimizer= train()
 
     # # 模型保存
     # torch.save(net, 'cnn.pth')
-    #
+
     # model = torch.load("cnn.pth")
     # test(model)
     # print('done')
