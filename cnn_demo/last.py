@@ -232,7 +232,7 @@ def save_featureMap(name,list):
             plt.close()
 
 def train():
-    file = open('data.txt', mode='w',encoding='utf-8')
+    file = open('data.txt', mode='a+',encoding='utf-8')
     batch_size = 2
     trainimage_path = 'E:/graduate_study/work/full_dataset/TraingSet/TrainingSet_images'
     trainmask_path='./data_list/train/mask'
@@ -252,17 +252,21 @@ def train():
     )
     # model = UNet(1, 2)
     model = Net()
+    if os.path.exists('ocnn.pth'):
+        print("exist")
+        model=torch.load('ocnn.pth')
     # 查看每层的输出大小
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     summary(model, input_size=(1, 256, 256))
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.005)
     loss_function = nn.BCELoss()
     num_size = 120
     for num in range(num_size):
     #while(True):
         Loss = 0
+        print('----第'+str(num+1)+'轮迭代-----')
         writedata='----第'+str(num+1)+'轮迭代-----\n'
         file.write(writedata)
         """
@@ -284,7 +288,7 @@ def train():
             writedata=str(name[i])+'损失为：'+str(loss.item())+'\n'
             file.write(writedata)
             print("{}损失为：{}".format(name[i],loss))
-            torch.save(model, 'cnn.pth')
+            torch.save(model, 'ocnn.pth')
             #save_featureMap(name[i].split('.')[0], fm)
         writedata = '----第' + str(num+1) + '轮迭代总损失为'+str(Loss.item())+'-----\n'
         file.write(writedata)
@@ -294,10 +298,10 @@ def train():
 
 
 def test(model):
-    # testimage_path = 'E:/graduate_study/work/full_dataset/Test1Set/Test1Set_images'
-    # testmask_path = 'E:/graduate_study/work/full_dataset/Test1Set/Test1Set_labels/ocontour'
-    testimage_path = './data_list/test/image'
-    testmask_path = './data_list/test/mask'
+    testimage_path = 'E:/graduate_study/work/full_dataset/Test1Set/Test1Set_images'
+    testmask_path = 'E:/graduate_study/work/full_dataset/Test1Set/Test1Set_labels/ocontour'
+    # testimage_path = './data_list/test/image'
+    # testmask_path = './data_list/test/mask'
     testdataset = Mydataset(testimage_path,testmask_path)
     name=testdataset.name
     test_dataloaders = DataLoader(dataset=testdataset, batch_size=1)
@@ -331,6 +335,6 @@ if __name__ == '__main__':
     # # 模型保存
     # torch.save(net, 'cnn.pth')
 
-    # model = torch.load("cnn.pth")
-    # test(model)
-    # print('done')
+    model = torch.load("ocnn.pth")
+    test(model)
+    print('done')
