@@ -224,7 +224,7 @@ save_image(outputs, 'test.png')
 # import torchvision
 # from PIL import Image
 # from torch import nn
-# from torch.utils.data import DataLoader
+# from torch.utils.data.txt import DataLoader
 # from torchvision.utils import save_image
 # from torchvision.datasets import ImageFolder
 # from torchvision import transforms,datasets
@@ -235,8 +235,8 @@ save_image(outputs, 'test.png')
 #     transforms.ToTensor()
 # ])
 #
-# data_images_path ='E:/python/Learning/picture/image/61.png'
-# label_images_path ='E:/python/Learning/picture/label/61.png'
+# data_images_path ='E:/python/Learning/picture/image/61a.png'
+# label_images_path ='E:/python/Learning/picture/label/61a.png'
 # data_images=Image.open(data_images_path)
 # test_images=Image.open(label_images_path)
 # data_loader=DataLoader(transforms(data_images),batch_size=1,shuffle=False)#初始化数据集
