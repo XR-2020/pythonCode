@@ -157,7 +157,7 @@ class MyNet(nn.Module):
         input=self.inlayer(input)
         input=F.interpolate(input,scale_factor=2,mode='nearest')
         input=self.outlayer1(input)
-        input=F.interpolate(input,scale_factor=2,mode='nearest')
+        input=F.interpolate(input,scale_factor=2,mode='nearest')#上采样
         input=self.outlayer2(input)
         input = F.interpolate(input, scale_factor=2, mode='nearest')
         input = self.outlayer3(input)

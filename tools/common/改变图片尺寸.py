@@ -5,7 +5,7 @@ import os.path
 import glob
 def convertjpg(jpgfile,outdir,width=216,height=256):
     img2=Image.open(jpgfile)
-    img=img2.copy(img2)
+    img=img2.copy()
     try:
         new_img=img.resize((width,height),Image.BILINEAR)
         new_img.save(os.path.join(outdir,os.path.basename(jpgfile)))
@@ -14,8 +14,8 @@ def convertjpg(jpgfile,outdir,width=216,height=256):
 
 
 if __name__=='__main__':
-    path="E:/python/tools/common"
+    path="./"
     list=os.listdir(path)
 for jpgfile in list:
     if '.png' in jpgfile:
-        convertjpg(os.path.join(path,jpgfile),"E:/python/tools/common")
+        convertjpg(os.path.join(path,jpgfile),"./")

@@ -45,3 +45,19 @@ for item1 in firstlist:#遍历一级文件夹
             copypath = os.path.join(des_path, 'icontour',item2)  # 拼接出目标路径
             shutil.copy(filepath, copypath)
 print("OK")
+
+
+"""
+移动文件夹位置
+"""
+
+# import os
+# import shutil
+#
+# origin_path='D:/graduate_study/Analysize/Test2SetContours'
+# object_dir='D:/graduate_study/Analysize/Test2Set'
+# dir=os.listdir(origin_path)
+# for item in dir:
+#     object_path=os.path.join(object_dir,'patient'+item[1:3])
+#     source_path=os.path.join(origin_path,item)
+#     shutil.move(source_path, object_path)

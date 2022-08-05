@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 from torchsummary import summary
+from torch.optim import lr_scheduler
 
 class Mydataset(Dataset):
     def __init__(self, image_path,mask_path):
@@ -174,25 +175,31 @@ class Net(nn.Module):
             nn.BatchNorm2d(out_size)
         )
 
-def save_featureMap(name,list):
-    dir_path='E:/python/cnn_demo/picture'
-    save_path = os.path.join(dir_path, name)
-    if not os.path.exists(save_path):
-        os.mkdir(save_path)
+def save_featureMap(name,list,epoch):
+    dir_path='D:/result/ioccutour'
+    first_path = os.path.join(dir_path, 'epoch_'+str(name))
+    print(first_path)
+    if not os.path.exists(first_path):
+        os.mkdir(first_path)
+    save_path=os.path.join(first_path,'batch_'+str(epoch))
+    os.mkdir(save_path)
+    print(save_path)
     for a, feature_map in enumerate(list):  # a（int）：list中的元素下标，feature_map:元素本身
-        #feature_map = torchvision.utils.make_grid(feature_map)
+        channel = feature_map.shape[1]
+        len = feature_map.shape[0]
+        feature_map = torchvision.utils.make_grid(feature_map,padding=0)
         # [N, C, H, W] -> [C, H, W]降维并转为ndarray
-        im = np.squeeze(feature_map,0)
-        im=im.detach().numpy()
+        #im = np.squeeze(feature_map,0)
+        im=feature_map.detach().numpy()
 
         # [C, H, W] -> [H, W, C]
         # 需要改变才可以正常显示图像，调整通道顺序
         im = np.transpose(im, [1, 2, 0])
-        for i in range(im.shape[2]):  # 列表中一项里每个特征图生成
+        for i in range(channel):  # 列表中一项里每个特征图生成
             # ax = plt.subplot(4, 4, i + 1)
             # [H, W, C]  cmap='gray' :设置为灰度图， [:, :, i]选择对channels进行切分
             # 设置大小
-            plt.figure(figsize=(im.shape[0] / 100, im.shape[1] / 100), dpi=100)
+            plt.figure(figsize=((im.shape[1] / 100)*len, im.shape[0] / 100), dpi=100)
             plt.axes([0, 0, 1, 1])
             plt.imshow(im[:, :, i], cmap='gray')
             plt.axis('off')
@@ -208,32 +215,32 @@ def save_featureMap(name,list):
             if a == 4:
                 plt.savefig('{}/layer5_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight', pad_inches=0)
             if a == 5:
-                plt.savefig('{}/ravel_layer32_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight',
+                plt.savefig('{}/ravel_layer32.png'.format(save_path), dpi=100, bbox_inches='tight',
                             pad_inches=0)
             if a == 6:
-                plt.savefig('{}/ravel_layer16_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight',
+                plt.savefig('{}/ravel_layer16.png'.format(save_path), dpi=100, bbox_inches='tight',
                             pad_inches=0)
             if a == 7:
-                plt.savefig('{}/ravel_layer8_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight',
+                plt.savefig('{}/ravel_layer8.png'.format(save_path), dpi=100, bbox_inches='tight',
                             pad_inches=0)
             if a == 8:
-                plt.savefig('{}/x32transpose_layer2_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight',
+                plt.savefig('{}/x32transpose_layer2.png'.format(save_path), dpi=100, bbox_inches='tight',
                             pad_inches=0)
             if a == 9:
-                plt.savefig('{}/x16 + x32_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight', pad_inches=0)
+                plt.savefig('{}/x16 + x32.png'.format(save_path), dpi=100, bbox_inches='tight', pad_inches=0)
             if a == 10:
-                plt.savefig('{}/x16transpose_layer2_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight',
+                plt.savefig('{}/x16transpose_layer2.png'.format(save_path), dpi=100, bbox_inches='tight',
                             pad_inches=0)
             if a == 11:
                 plt.savefig('{}/x8 + x16_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight', pad_inches=0)
             if a == 12:
-                plt.savefig('{}/transpose_layer8_{}.png'.format(save_path, i + 1), dpi=100, bbox_inches='tight',
+                plt.savefig('{}/transpose_layer8.png'.format(save_path), dpi=100, bbox_inches='tight',
                             pad_inches=0)
             plt.close()
 
 def train():
     file = open('data.txt', mode='a+',encoding='utf-8')
-    batch_size = 2
+    batch_size = 4
     trainimage_path = 'E:/graduate_study/work/full_dataset/TraingSet/TrainingSet_images'
     trainmask_path='./data_list/train/mask'
     """
@@ -259,10 +266,9 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     summary(model, input_size=(1, 256, 256))
-
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.005)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     loss_function = nn.BCELoss()
-    num_size = 120
+    num_size = 50
     for num in range(num_size):
     #while(True):
         Loss = 0
@@ -287,9 +293,10 @@ def train():
             optimizer.step()
             writedata=str(name[i])+'损失为：'+str(loss.item())+'\n'
             file.write(writedata)
-            print("{}损失为：{}".format(name[i],loss))
-            torch.save(model, 'ocnn.pth')
-            #save_featureMap(name[i].split('.')[0], fm)
+            print("batch_{}损失为：{}".format(i,loss))
+            torch.save(model, 'icnn.pth')
+            # if num%20==0:
+            #     save_featureMap(num+1, fm,i+1)
         writedata = '----第' + str(num+1) + '轮迭代总损失为'+str(Loss.item())+'-----\n'
         file.write(writedata)
         print("第{}轮epoch总损失为：{}".format(num+1,Loss.item()))
@@ -318,7 +325,7 @@ def test(model):
             img = img * 255  # *255
             im = Image.fromarray(img)  # numpy 转 image类
             im = np.array(im, dtype='uint8')
-            Image.fromarray(im, 'L').save("result/{}".format(name[i]))
+            Image.fromarray(im, 'L').save("result/test1/ocontour/{}".format(name[i]))
             i = i + 1
             plt.pause(0.01)
 """
@@ -329,7 +336,7 @@ def test(model):
 
 if __name__ == '__main__':
 
-    train()
+    #train()
     # net, optimizer= train()
 
     # # 模型保存
