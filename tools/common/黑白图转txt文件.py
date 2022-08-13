@@ -3,8 +3,8 @@ import os
 import cv2 as cv
 import numpy as np
 
-all_dir='D:/graduate_study/test2/'
-image_dir='D:/full_data/result/test2/icontour'
+all_dir='D:/graduate_study/Analysize/Test1AutomaticContours'
+image_dir='D:/full_data/test1/icontour'
 img_list=os.listdir(image_dir)
 for item in img_list:
     dir_path = os.path.join(all_dir, item[0:3] + 'contours-auto')

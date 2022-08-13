@@ -11,7 +11,7 @@ from torchvision.datasets import ImageFolder
 from torchvision import transforms,datasets
 from torch.nn import functional as F
 from cnn_demo.cnnSeg_torch import summary
-
+from Attention_Unet import AttentionUnet
 transforms = transforms.Compose([
     transforms.ToTensor()
 ])
@@ -177,17 +177,20 @@ class MyNet(nn.Module):
         )
 
 if __name__ == '__main__':
+
+    file = open('data.txt', mode='a+', encoding='utf-8')
     save_path='./picture'
-    net=MyNet()
+    net=AttentionUnet(1)
+    # net = MyNet()
     summary(net, input_size=(1, 256, 256))
     loss_fn=nn.BCELoss()
-    optimizer=torch.optim.Adam(net.parameters(),lr=0.01)
+    optimizer=torch.optim.Adam(net.parameters(),lr=0.05)
 
-    total=130
+    total=121
     loss_total=0
     point_x=[]
     point_y=[]
-    for epoch in range (total):
+    for epoch in range (1,total):
         loss_total = 0
         print("**********{}".format(epoch))
         for index, (image, label) in enumerate(data_loader):
@@ -197,26 +200,28 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if(epoch % 10==0):
-                _out_image = output[0]
-                save_image(_out_image, f'{save_path}/{epoch}.png')
-            torch.save(net, 'params.pth')
-        plt.scatter(epoch, loss.item(), s=8,color='blue')
-        point_x.append(epoch)
-        point_y.append(loss.item())
+            point_x.append(epoch)
+            point_y.append(loss.item())
+            writedata =str(epoch)+' '+str(loss.item())+'\n'
+            file.write(writedata)
+        if(epoch % 10==0 or epoch==1):
+            _out_image = output[0]
+            save_image(_out_image, f'{save_path}/{epoch}.png')
+    torch.save(net, 'params.pth')
+    plt.scatter(epoch, loss.item(), s=8,color='blue')
     plt.plot(point_x, point_y, linewidth=1, color='b')
     plt.title('loss', fontsize=20)
     plt.show()
 
+    test_path = 'P01-0100.png'
+    test_image = keep_image_size_open(test_path)
+    test = transforms(test_image)
+    model = torch.load('E:/python/params.pth')
+    test = torch.unsqueeze(test, dim=0)
+    outputs = model(test)
+    print(outputs.shape)
+    save_image(outputs, 'test.png')
 
-test_path='img.png'
-test_image=keep_image_size_open(test_path)
-test=transforms(test_image)
-model=torch.load('params.pth')
-test=torch.unsqueeze(test, dim=0)
-outputs=model(test)
-print(outputs.shape)
-save_image(outputs, 'test.png')
 
 # import os
 #
