@@ -17,7 +17,7 @@ import os
 #     img.save(os.path.join(path, image))
 
 #操作单张图
-img = Image.open('test.png')  # 打开图片
+img = Image.open('mask.png')  # 打开图片
 print(img.format, img.size, img.mode)#打印出原图格式
-img = img.convert("L")  # 4通道转化为灰度L通道
-img.save('test.png')
+img = img.convert("RGB")  # 4通道转化为灰度L通道
+img.save('mask.png')
